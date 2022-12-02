@@ -8,10 +8,10 @@ def elvesLoadDataProcessing():
         elvesLoad.append(i.split("\n"))
     return elvesLoad
 
-def findMax(lists):
+def findMax(elves):
     maxValue = 0 
     allLoads = []
-    for elf in lists:
+    for elf in elves:
         elfValue = 0 
         for val in elf: 
             elfValue += int(val) 
@@ -26,6 +26,7 @@ def sumOfList(start, end, array):
     for i in range(start, end, 1):
         sumTotal += array[i]
     return sumTotal
+
 elvesLoad = elvesLoadDataProcessing()
 maxValue, allLoads = findMax(elvesLoad)
 

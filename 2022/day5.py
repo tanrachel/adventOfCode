@@ -1,8 +1,5 @@
 from aocd import get_data
 
-data = get_data(day=5, year=2022)
-data = data.split("\n")
-
 def getInstructions():
     data = get_data(day=5, year=2022)
     data = data.split("\n") 

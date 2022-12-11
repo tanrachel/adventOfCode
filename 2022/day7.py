@@ -2,10 +2,9 @@ from aocd import get_data
 
 def getData():
     data = get_data(day=7, year=2022)
-    data = data.split("\n") 
-    return data[1:]
-print(getData())
-testData = """$ ls
+    return data.split("\n")
+testData = """$ cd /
+$ ls
 dir a
 14848514 b.txt
 8504156 c.dat
@@ -28,95 +27,89 @@ $ ls
 5626152 d.ext
 7214296 k"""
 testData = testData.split("\n")
-print(testData)
+folders = {}
+folderPath = []
 
-class File:
-    def __init__(self, name, size):
-        self.name = name
-        self.size = size 
-    def PrintFile(self):
-        print("--file: ", self.name)
-class Directory:
-    def __init__(self, name, parent):
-        self.name = name
-        self.parent = parent 
-        self.files = []
-        self.childDirectories = {}
-        self.total = 0
-    def insertFile(self, file):
-        self.files.append(file) 
-    def insertDirectory(self, dirToInsert):
-        self.childDirectories[dirToInsert.name] = dirToInsert
-
-    def GetChildDirectories(self, findDir):
-        return self.childDirectories[findDir]
-
-
-def iterateAll(input,indent):
-    print(" "*indent,"--dir:", input.name , " ", input.total)
-    total = 0 
-    indent += 3
-    for file in input.files:
-        print(" "*indent,"--file:", file.name, " ", file.size)
-        total += int(file.size)
-    input.total = total
-    for key, value in input.childDirectories.items():
-        iterateAll(value,indent)
-        input.total += value.total
-    print("catchup ",input.name , " ", input.total)
-
-    indent -=3
-    # print("final input amount: ",input.name , " ", input.total)
-
-def processInstructions(inputData, root):
-    currDirectory = root 
-    for i in range(0,len(inputData),1): 
-        print(i,"-",inputData[i])
-        instructionProcessed = inputData[i].split(" ")
-        if instructionProcessed[1] == "ls":
-            continue
-        if instructionProcessed[1] == "cd":
-            if instructionProcessed[2] == "..":
-                currDirectory = currDirectory.parent
+def processData(inputData): 
+    for line in inputData: 
+        words = line.split(" ")
+        if words[0] == "$":
+            if words[1] == "cd":
+                if words[2] == "/":
+                    folderPath.append("/")
+                    continue
+                if words[2] == "..":
+                    if len(folderPath)==2:
+                        folderPath.pop()
+                    else:
+                        folderPath.pop()
+                        folderPath.pop()
+                    continue
+                if len(folderPath) > 1:
+                    # print(folderPath)
+                    folderPath.append("/")
+                    folderPath.append(words[2])
+                else: 
+                    folderPath.append(words[2])
                 continue
-            elif instructionProcessed[2] == "/":
-                currDirectory = root
+            if words[1] == "ls":
                 continue
+        folder = ''.join(folderPath)
+        if words[0] != "dir":
+            if folder in folders:
+                folders[folder] += int(words[0])
             else:
-                currDirectory = currDirectory.childDirectories[instructionProcessed[2]]
+                folders[folder] = int(words[0])
+        else:
+            if folder not in folders:
+                folders[folder] = 0
+
+def constructFileName(array):
+    fileName = ""
+    for i in array:
+        fileName += "/"
+        fileName += i
+    return fileName
+def sumFolderSize(): 
+    for key, value in folders.items():
+        keyCopy = key.split("/")
+        keyCopy.pop(0)
+        if len(keyCopy) == 1:
+            if keyCopy[0] != "":
+                folders["/"] += value
+            continue
+        while keyCopy != []:
+            keyCopy.pop()
+            if keyCopy == []:
                 continue
-
-        if instructionProcessed[0] != "$":
-            if instructionProcessed[0] == "dir":
-                currDirectory.insertDirectory(Directory(instructionProcessed[1],currDirectory))
-            else: 
-                currDirectory.insertFile(File(instructionProcessed[1], instructionProcessed[0]))
-print("======== traversal =========")
-# iterateAndPopulate(root)
-# iterate(root,1)
-# print(root.total)
-root = Directory("/",None)
-
-processInstructions(getData(),root)
+            keyToAddTo = constructFileName(keyCopy)
+            folders[keyToAddTo] += value
+            print("new value: ", keyToAddTo, "-",folders[keyToAddTo])
+        folders["/"] += value
 
 
-iterateAll(root,1)
-print("=========traverse and look=======")
+processData(getData())
+sumFolderSize()
+print("Folder Total: ",folders["/"])
 
-def traverse(root):
-    answer = []
-    traverseThroughMap(root,answer)
-    return sum(answer)
-    
-def traverseThroughMap(dir, answer):
-    if len(dir.childDirectories)==0:
-        if dir.total < 100000:
-            answer.append(dir.total)
-        return
-    else:
-        for key, value in dir.childDirectories.items():
-            traverseThroughMap(value,answer)
-            if value.total < 10000:
-                answer.append(dir.total)
+def findPart1():
+    totalSizes = 0
+    for key, value in folders.items():
+        if value <= 100000:
+            totalSizes+=value
+    return totalSizes 
+print(findPart1())
 
-print(traverse(root))
+print("The amount we need to delete for part 2: ", 30000000 - (70000000 - folders["/"])) #26,063,888 
+targetNumber = 30000000 - (70000000 - folders["/"])
+
+def findPart2():
+    minimumValue = 70000000
+    for key, value in folders.items():
+        print("greaterThanTarget: ",value >= targetNumber," value: ", value, "minimumValue: ", minimumValue)
+
+        if value >= targetNumber:
+            if value < minimumValue:
+                minimumValue = value
+    return minimumValue
+print(findPart2())
